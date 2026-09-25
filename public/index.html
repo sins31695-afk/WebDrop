@@ -1,0 +1,2458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>WebDrop</title>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- QR GENERATOR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<!-- QR SCANNER -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background: #000;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #fff;
+}
+
+.container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+h1 {
+    text-align: center;
+    margin: 0 0 8px;
+    font-size: 30px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #111;
+    border-radius: 14px;
+    padding: 24px;
+    border: 1px solid #222;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.primary,
+.secondary {
+    background: #2563eb;
+    color: white;
+    width: 100%;
+}
+
+.primary:hover,
+.secondary:hover {
+    background: #1d4ed8;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    background: #000;
+    color: #fff;
+}
+
+input[type="text"]::placeholder {
+    color: #777;
+}
+
+.join-box {
+    margin-top: 20px;
+}
+
+.join-confirm {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.room-code {
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 5px;
+    margin: 20px 0;
+}
+
+.status {
+    text-align: center;
+    color: #aaa;
+    margin: 15px 0;
+}
+
+.success {
+    color: #22c55e;
+}
+
+.error {
+    color: #ef4444;
+    text-align: center;
+    margin-top: 12px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* QR */
+
+.qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+}
+
+#qrcode {
+    background: #fff;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.qr-label {
+    color: #aaa;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+/* SCANNER */
+
+.scanner-box {
+    margin-top: 15px;
+}
+
+#qr-reader {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+}
+
+.scan-button {
+    margin-top: 10px;
+    width: 100%;
+    background: #2563eb;
+    color: white;
+}
+
+/* FILE */
+
+.file-area {
+    margin-top: 20px;
+}
+
+.file-input {
+    display: none;
+}
+
+.select-file {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: 2px dashed #444;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    color: #bbb;
+}
+
+.select-file:hover {
+    border-color: #2563eb;
+    color: #fff;
+}
+
+.preview-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    color: #bbb;
+    font-size: 14px;
+}
+
+.preview-option input {
+    width: 16px;
+    height: 16px;
+}
+
+.selected-files {
+    margin-top: 15px;
+}
+
+.file-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #333;
+}
+
+.file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    color: #888;
+    font-size: 13px;
+}
+
+.send-area {
+    margin-top: 15px;
+}
+
+.send-button {
+    width: 100%;
+    background: #2563eb;
+    color: #fff;
+}
+
+.send-button:disabled {
+    opacity: .6;
+}
+
+.progress-container {
+    margin-top: 20px;
+}
+
+.progress-title {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.progress {
+    width: 100%;
+    height: 10px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #2563eb;
+    transition: width .15s ease;
+}
+
+.transfer-status {
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.sent-success {
+    color: #22c55e;
+}
+
+.waiting-receive {
+    text-align: center;
+    color: #aaa;
+    margin-top: 20px;
+}
+
+.received-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.received-header h3 {
+    margin: 0;
+}
+
+.download-all {
+    background: #2563eb;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.received-item {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+.received-name {
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.download {
+    display: inline-block;
+    margin-top: 10px;
+    text-decoration: none;
+    background: #2563eb;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+.preview {
+    display: block;
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    margin-top: 12px;
+    border-radius: 8px;
+}
+
+.video-preview {
+    width: 100%;
+    max-height: 300px;
+    margin-top: 12px;
+    border-radius: 8px;
+    background: #000;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+<h1>⚡ WebDrop</h1>
+
+<div class="subtitle">
+Fast file sharing between your devices
+</div>
+
+
+<!-- START PAGE -->
+
+<div
+    id="startPage"
+    class="card"
+>
+
+<div class="buttons">
+
+<button
+    id="shareFileBtn"
+    class="primary"
+>
+Share File
+</button>
+
+<button
+    id="receiveFileBtn"
+    class="secondary"
+>
+Receive File
+</button>
+
+</div>
+
+
+<div
+    id="joinBox"
+    class="join-box hidden"
+>
+
+<input
+    id="roomInput"
+    type="text"
+    placeholder="Enter 6-digit room code"
+    maxlength="6"
+    inputmode="numeric"
+    pattern="[0-9]*"
+    autocomplete="one-time-code"
+>
+
+<button
+    id="joinConfirmBtn"
+    class="primary join-confirm"
+>
+Join
+</button>
+
+
+<!-- QR SCAN -->
+
+<button
+    id="scanQrBtn"
+    class="scan-button"
+>
+Scan QR Code
+</button>
+
+
+<div
+    id="scannerBox"
+    class="scanner-box hidden"
+>
+
+<div id="qr-reader"></div>
+
+<button
+    id="stopScanBtn"
+    class="scan-button"
+>
+Stop Scanner
+</button>
+
+</div>
+
+</div>
+
+
+<div
+    id="errorMessage"
+    class="error"
+></div>
+
+</div>
+
+
+<!-- ROOM PAGE -->
+
+<div
+    id="roomPage"
+    class="card hidden"
+>
+
+<div class="status">
+Share this QR code or room code with your other device
+</div>
+
+
+<!-- QR -->
+
+<div class="qr-box">
+
+<div id="qrcode"></div>
+
+<div class="qr-label">
+Scan this QR code from the other device
+</div>
+
+</div>
+
+
+<div
+    id="roomCode"
+    class="room-code"
+></div>
+
+
+<div
+    id="connectionStatus"
+    class="status"
+>
+Waiting for another device...
+</div>
+
+</div>
+
+
+<!-- CONNECTED -->
+
+<div
+    id="connectedPage"
+    class="card hidden"
+>
+
+<div
+    class="status success"
+>
+Both devices are connected successfully.
+</div>
+
+
+<!-- SHOW PREVIEW BOTH DEVICES -->
+
+<div class="preview-option">
+
+<input
+    type="checkbox"
+    id="previewCheckbox"
+>
+
+<label for="previewCheckbox">
+Show Preview
+</label>
+
+</div>
+
+
+<!-- RECEIVER -->
+
+<div
+    id="receiverWaiting"
+    class="waiting-receive hidden"
+>
+Receiving file, please wait.
+</div>
+
+
+<!-- SENDER -->
+
+<div
+    id="senderArea"
+    class="file-area hidden"
+>
+
+<input
+    type="file"
+    id="fileInput"
+    class="file-input"
+    multiple
+>
+
+<label
+    for="fileInput"
+    class="select-file"
+>
+Select Files
+</label>
+
+
+<div
+    id="selectedFiles"
+    class="selected-files"
+></div>
+
+
+<div class="send-area">
+
+<button
+    id="sendFilesBtn"
+    class="send-button"
+>
+Send Files
+</button>
+
+</div>
+
+
+<div
+    id="transferStatus"
+    class="transfer-status"
+></div>
+
+</div>
+
+
+<!-- SENDING -->
+
+<div
+    id="sendingProgressContainer"
+    class="progress-container hidden"
+>
+
+<div
+    id="sendingTitle"
+    class="progress-title"
+>
+Sending
+</div>
+
+<div class="progress">
+
+<div
+    id="sendingProgress"
+    class="progress-bar"
+></div>
+
+</div>
+
+</div>
+
+
+<!-- RECEIVING -->
+
+<div
+    id="receivingProgressContainer"
+    class="progress-container hidden"
+>
+
+<div
+    id="receivingTitle"
+    class="progress-title"
+>
+Receiving
+</div>
+
+<div class="progress">
+
+<div
+    id="receivingProgress"
+    class="progress-bar"
+></div>
+
+</div>
+
+</div>
+
+
+<!-- RECEIVED -->
+
+<div class="received-header">
+
+<h3>
+Received Files
+</h3>
+
+<button
+    id="downloadAllBtn"
+    class="download-all hidden"
+>
+Download All
+</button>
+
+</div>
+
+
+<div
+    id="receivedFiles"
+></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const socket = io();
+
+
+let roomCode = null;
+
+let userRole = null;
+
+let peerConnection = null;
+
+let dataChannel = null;
+
+let selectedFiles = [];
+
+let incomingFile = null;
+
+let incomingChunks = [];
+
+let incomingBytes = 0;
+
+let receivedFiles = [];
+
+let totalFilesToSend = 0;
+
+let currentFileSending = 0;
+
+let totalFilesToReceive = 0;
+
+let currentFileReceiving = 0;
+
+let html5QrCode = null;
+
+
+/* ELEMENTS */
+
+const startPage =
+document.getElementById("startPage");
+
+const roomPage =
+document.getElementById("roomPage");
+
+const connectedPage =
+document.getElementById("connectedPage");
+
+const shareFileBtn =
+document.getElementById("shareFileBtn");
+
+const receiveFileBtn =
+document.getElementById("receiveFileBtn");
+
+const joinBox =
+document.getElementById("joinBox");
+
+const roomInput =
+document.getElementById("roomInput");
+
+const joinConfirmBtn =
+document.getElementById("joinConfirmBtn");
+
+const scanQrBtn =
+document.getElementById("scanQrBtn");
+
+const stopScanBtn =
+document.getElementById("stopScanBtn");
+
+const scannerBox =
+document.getElementById("scannerBox");
+
+const roomCodeElement =
+document.getElementById("roomCode");
+
+const connectionStatus =
+document.getElementById("connectionStatus");
+
+const errorMessage =
+document.getElementById("errorMessage");
+
+const senderArea =
+document.getElementById("senderArea");
+
+const receiverWaiting =
+document.getElementById("receiverWaiting");
+
+const fileInput =
+document.getElementById("fileInput");
+
+const selectedFilesElement =
+document.getElementById("selectedFiles");
+
+const sendFilesBtn =
+document.getElementById("sendFilesBtn");
+
+const previewCheckbox =
+document.getElementById("previewCheckbox");
+
+const sendingProgressContainer =
+document.getElementById(
+"sendingProgressContainer"
+);
+
+const receivingProgressContainer =
+document.getElementById(
+"receivingProgressContainer"
+);
+
+const sendingProgress =
+document.getElementById(
+"sendingProgress"
+);
+
+const receivingProgress =
+document.getElementById(
+"receivingProgress"
+);
+
+const sendingTitle =
+document.getElementById(
+"sendingTitle"
+);
+
+const receivingTitle =
+document.getElementById(
+"receivingTitle"
+);
+
+const transferStatus =
+document.getElementById(
+"transferStatus"
+);
+
+const receivedFilesElement =
+document.getElementById(
+"receivedFiles"
+);
+
+const downloadAllBtn =
+document.getElementById(
+"downloadAllBtn"
+);
+
+
+/* SHARE FILE */
+
+shareFileBtn.addEventListener(
+"click",
+() => {
+
+userRole = "sender";
+
+errorMessage.innerText = "";
+
+roomCode =
+String(
+Math.floor(
+100000 +
+Math.random() * 900000
+)
+);
+
+socket.emit(
+"create-room",
+roomCode
+);
+
+}
+);
+
+
+/* RECEIVE FILE */
+
+receiveFileBtn.addEventListener(
+"click",
+() => {
+
+userRole = "receiver";
+
+joinBox.classList.remove(
+"hidden"
+);
+
+roomInput.focus();
+
+}
+);
+
+
+/* NUMBER ONLY */
+
+roomInput.addEventListener(
+"input",
+() => {
+
+roomInput.value =
+roomInput.value
+.replace(/\D/g, "")
+.slice(0, 6);
+
+}
+);
+
+
+/* JOIN */
+
+joinConfirmBtn.addEventListener(
+"click",
+() => {
+
+joinUsingCode();
+
+}
+);
+
+
+/* JOIN FUNCTION */
+
+function joinUsingCode() {
+
+const code =
+roomInput.value.trim();
+
+if (
+code.length !== 6
+) {
+
+errorMessage.innerText =
+"Please enter a valid 6-digit room code.";
+
+return;
+
+}
+
+errorMessage.innerText = "";
+
+stopScanner();
+
+roomCode = code;
+
+socket.emit(
+"join-room",
+roomCode
+);
+
+}
+
+
+/* ENTER KEY */
+
+roomInput.addEventListener(
+"keydown",
+event => {
+
+if (
+event.key === "Enter"
+) {
+
+joinUsingCode();
+
+}
+
+}
+);
+
+
+/*
+    GENERATE QR
+*/
+
+function generateQRCode() {
+
+const qrContainer =
+document.getElementById(
+"qrcode"
+);
+
+qrContainer.innerHTML = "";
+
+
+/*
+    QR contains a WebDrop
+    pairing URL.
+
+    Example:
+
+    https://your-site.com/?room=123456
+*/
+
+const pairingUrl =
+window.location.origin +
+"/?room=" +
+roomCode;
+
+
+new QRCode(
+qrContainer,
+{
+text: pairingUrl,
+width: 220,
+height: 220,
+colorDark: "#000000",
+colorLight: "#ffffff",
+correctLevel:
+QRCode.CorrectLevel.M
+}
+);
+
+}
+
+
+/* ROOM CREATED */
+
+socket.on(
+"room-created",
+code => {
+
+startPage.classList.add(
+"hidden"
+);
+
+roomPage.classList.remove(
+"hidden"
+);
+
+roomCodeElement.innerText =
+code;
+
+roomCode = code;
+
+generateQRCode();
+
+}
+);
+
+
+/* ROOM JOINED */
+
+socket.on(
+"room-joined",
+() => {
+
+startPage.classList.add(
+"hidden"
+);
+
+roomPage.classList.remove(
+"hidden"
+);
+
+roomCodeElement.innerText =
+roomCode;
+
+connectionStatus.innerText =
+"Connecting...";
+
+}
+);
+
+
+/* ROOM ERROR */
+
+socket.on(
+"room-error",
+message => {
+
+errorMessage.innerText =
+message;
+
+}
+);
+
+
+/*
+    AUTOMATIC QR URL DETECTION
+*/
+
+function checkPairingURL() {
+
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+const qrRoom =
+params.get("room");
+
+if (
+qrRoom &&
+/^\d{6}$/.test(qrRoom)
+) {
+
+userRole = "receiver";
+
+roomInput.value =
+qrRoom;
+
+joinBox.classList.remove(
+"hidden"
+);
+
+setTimeout(
+() => {
+
+joinUsingCode();
+
+},
+300
+);
+
+}
+
+}
+
+
+/*
+    SCAN QR
+*/
+
+scanQrBtn.addEventListener(
+"click",
+async () => {
+
+scannerBox.classList.remove(
+"hidden"
+);
+
+scanQrBtn.classList.add(
+"hidden"
+);
+
+
+if (
+typeof Html5Qrcode ===
+"undefined"
+) {
+
+errorMessage.innerText =
+"QR scanner could not be loaded.";
+
+return;
+
+}
+
+
+html5QrCode =
+new Html5Qrcode(
+"qr-reader"
+);
+
+
+try {
+
+await html5QrCode.start(
+
+{
+facingMode:
+"environment"
+},
+
+{
+fps: 10,
+
+qrbox: {
+width: 250,
+height: 250
+}
+
+},
+
+(decodedText) => {
+
+handleScannedQRCode(
+decodedText
+);
+
+},
+
+() => {
+
+}
+
+);
+
+} catch (
+error
+) {
+
+console.error(
+error
+);
+
+errorMessage.innerText =
+"Camera could not be opened. Please allow camera permission.";
+
+scannerBox.classList.add(
+"hidden"
+);
+
+scanQrBtn.classList.remove(
+"hidden"
+);
+
+}
+
+}
+);
+
+
+/*
+    QR RESULT
+*/
+
+function handleScannedQRCode(
+decodedText
+) {
+
+let scannedRoom = null;
+
+
+try {
+
+const url =
+new URL(
+decodedText
+);
+
+scannedRoom =
+url.searchParams.get(
+"room"
+);
+
+} catch {
+
+const match =
+decodedText.match(
+/\b\d{6}\b/
+);
+
+if (
+match
+) {
+
+scannedRoom =
+match[0];
+
+}
+
+}
+
+
+if (
+scannedRoom &&
+/^\d{6}$/.test(
+scannedRoom
+)
+) {
+
+roomInput.value =
+scannedRoom;
+
+stopScanner();
+
+joinUsingCode();
+
+} else {
+
+errorMessage.innerText =
+"Invalid WebDrop QR code.";
+
+}
+
+}
+
+
+/*
+    STOP QR SCANNER
+*/
+
+async function stopScanner() {
+
+if (
+html5QrCode
+) {
+
+try {
+
+if (
+html5QrCode.isScanning
+) {
+
+await html5QrCode.stop();
+
+}
+
+html5QrCode.clear();
+
+} catch (
+error
+) {
+
+console.log(
+"Scanner stop:",
+error
+);
+
+}
+
+html5QrCode = null;
+
+}
+
+scannerBox.classList.add(
+"hidden"
+);
+
+scanQrBtn.classList.remove(
+"hidden"
+);
+
+}
+
+
+/*
+    DEVICE CONNECTED
+*/
+
+socket.on(
+"device-connected",
+() => {
+
+connectionStatus.innerText =
+"Connecting devices...";
+
+createPeerConnection(
+userRole === "sender"
+);
+
+}
+);
+
+
+/*
+    DEVICE DISCONNECTED
+*/
+
+socket.on(
+"device-disconnected",
+() => {
+
+connectionStatus.innerText =
+"Other device disconnected.";
+
+}
+);
+
+
+/*
+    WEBRTC
+*/
+
+function createPeerConnection(
+isCreator
+) {
+
+if (
+peerConnection
+) {
+
+peerConnection.close();
+
+}
+
+
+peerConnection =
+new RTCPeerConnection({
+
+iceServers: [
+
+{
+urls:
+"stun:stun.l.google.com:19302"
+},
+
+{
+urls:
+"stun:stun1.l.google.com:19302"
+}
+
+]
+
+});
+
+
+peerConnection.onicecandidate =
+event => {
+
+if (
+event.candidate
+) {
+
+socket.emit(
+"ice-candidate",
+{
+roomCode,
+candidate:
+event.candidate
+}
+);
+
+}
+
+};
+
+
+peerConnection.onconnectionstatechange =
+() => {
+
+const state =
+peerConnection.connectionState;
+
+
+if (
+state === "connected"
+) {
+
+roomPage.classList.add(
+"hidden"
+);
+
+connectedPage.classList.remove(
+"hidden"
+);
+
+
+if (
+userRole === "sender"
+) {
+
+senderArea.classList.remove(
+"hidden"
+);
+
+receiverWaiting.classList.add(
+"hidden"
+);
+
+} else {
+
+senderArea.classList.add(
+"hidden"
+);
+
+receiverWaiting.classList.remove(
+"hidden"
+);
+
+receiverWaiting.innerText =
+"Receiving file, please wait.";
+
+}
+
+}
+
+
+if (
+state === "failed"
+) {
+
+connectionStatus.innerText =
+"Direct connection failed.";
+
+}
+
+};
+
+
+if (
+isCreator
+) {
+
+dataChannel =
+peerConnection.createDataChannel(
+"fileTransfer",
+{
+ordered: true
+}
+);
+
+setupDataChannel(
+dataChannel
+);
+
+
+peerConnection
+.createOffer()
+.then(
+offer =>
+peerConnection
+.setLocalDescription(
+offer
+)
+)
+.then(
+() => {
+
+socket.emit(
+"offer",
+{
+roomCode,
+offer:
+peerConnection
+.localDescription
+}
+);
+
+}
+);
+
+} else {
+
+peerConnection.ondatachannel =
+event => {
+
+dataChannel =
+event.channel;
+
+setupDataChannel(
+dataChannel
+);
+
+};
+
+}
+
+}
+
+
+/* OFFER */
+
+socket.on(
+"offer",
+async offer => {
+
+if (
+!peerConnection
+) {
+
+createPeerConnection(
+false
+);
+
+}
+
+await peerConnection
+.setRemoteDescription(
+offer
+);
+
+const answer =
+await peerConnection
+.createAnswer();
+
+await peerConnection
+.setLocalDescription(
+answer
+);
+
+socket.emit(
+"answer",
+{
+roomCode,
+answer:
+peerConnection
+.localDescription
+}
+);
+
+}
+);
+
+
+/* ANSWER */
+
+socket.on(
+"answer",
+async answer => {
+
+if (
+!peerConnection
+) return;
+
+await peerConnection
+.setRemoteDescription(
+answer
+);
+
+}
+);
+
+
+/* ICE */
+
+socket.on(
+"ice-candidate",
+async candidate => {
+
+if (
+!peerConnection
+) return;
+
+try {
+
+await peerConnection
+.addIceCandidate(
+candidate
+);
+
+} catch (
+error
+) {
+
+console.log(
+"ICE error:",
+error
+);
+
+}
+
+}
+);
+
+
+/*
+    DATA CHANNEL
+*/
+
+function setupDataChannel(
+channel
+) {
+
+channel.binaryType =
+"arraybuffer";
+
+channel.bufferedAmountLowThreshold =
+1024 * 1024;
+
+
+channel.onopen =
+() => {
+
+console.log(
+"Direct P2P connection ready."
+);
+
+};
+
+
+channel.onmessage =
+event => {
+
+if (
+typeof event.data ===
+"string"
+) {
+
+let message;
+
+try {
+
+message =
+JSON.parse(
+event.data
+);
+
+} catch {
+
+return;
+
+}
+
+
+if (
+message.type ===
+"file-count"
+) {
+
+totalFilesToReceive =
+message.count;
+
+currentFileReceiving =
+0;
+
+receiverWaiting.classList.add(
+"hidden"
+);
+
+return;
+
+}
+
+
+if (
+message.type ===
+"file-start"
+) {
+
+currentFileReceiving++;
+
+incomingFile = {
+
+name:
+message.name,
+
+size:
+message.size,
+
+mime:
+message.mime
+
+};
+
+incomingChunks = [];
+
+incomingBytes = 0;
+
+
+receivingProgressContainer
+.classList.remove(
+"hidden"
+);
+
+receivingTitle.innerText =
+"Receiving " +
+currentFileReceiving +
+"/" +
+totalFilesToReceive;
+
+receivingProgress.style.width =
+"0%";
+
+return;
+
+}
+
+
+if (
+message.type ===
+"file-end"
+) {
+
+finishReceivingFile();
+
+return;
+
+}
+
+
+if (
+message.type ===
+"transfer-complete"
+) {
+
+receivingTitle.innerText =
+"Receiving " +
+totalFilesToReceive +
+"/" +
+totalFilesToReceive;
+
+receivingProgress.style.width =
+"100%";
+
+receiverWaiting.classList.remove(
+"hidden"
+);
+
+receiverWaiting.innerText =
+"Successfully Received";
+
+return;
+
+}
+
+return;
+
+}
+
+
+/* BINARY */
+
+if (
+incomingFile
+) {
+
+incomingChunks.push(
+event.data
+);
+
+incomingBytes +=
+event.data.byteLength;
+
+
+const percent =
+incomingFile.size > 0
+?
+(
+incomingBytes /
+incomingFile.size
+) * 100
+:
+100;
+
+
+receivingProgress.style.width =
+Math.min(
+100,
+percent
+) + "%";
+
+}
+
+};
+
+}
+
+
+/* FILE SELECT */
+
+fileInput.addEventListener(
+"change",
+() => {
+
+selectedFiles =
+Array.from(
+fileInput.files
+);
+
+renderSelectedFiles();
+
+}
+);
+
+
+/* SELECTED FILES */
+
+function renderSelectedFiles() {
+
+selectedFilesElement.innerHTML =
+"";
+
+
+selectedFiles.forEach(
+file => {
+
+const row =
+document.createElement(
+"div"
+);
+
+row.className =
+"file-row";
+
+
+const name =
+document.createElement(
+"div"
+);
+
+name.className =
+"file-name";
+
+name.innerText =
+file.name;
+
+
+const size =
+document.createElement(
+"div"
+);
+
+size.className =
+"file-size";
+
+size.innerText =
+formatBytes(
+file.size
+);
+
+
+row.appendChild(
+name
+);
+
+row.appendChild(
+size
+);
+
+selectedFilesElement.appendChild(
+row
+);
+
+}
+);
+
+}
+
+
+/* SEND FILES */
+
+sendFilesBtn.addEventListener(
+"click",
+async () => {
+
+if (
+selectedFiles.length === 0
+) {
+
+alert(
+"Please select at least one file."
+);
+
+return;
+
+}
+
+
+if (
+!dataChannel ||
+dataChannel.readyState !==
+"open"
+) {
+
+alert(
+"Direct device connection is not ready yet."
+);
+
+return;
+
+}
+
+
+sendFilesBtn.disabled =
+true;
+
+totalFilesToSend =
+selectedFiles.length;
+
+currentFileSending = 0;
+
+
+dataChannel.send(
+JSON.stringify({
+type:
+"file-count",
+count:
+totalFilesToSend
+})
+);
+
+
+sendingProgressContainer
+.classList.remove(
+"hidden"
+);
+
+transferStatus.innerText =
+"";
+
+
+try {
+
+for (
+const file
+of selectedFiles
+) {
+
+currentFileSending++;
+
+sendingTitle.innerText =
+"Sending " +
+currentFileSending +
+"/" +
+totalFilesToSend;
+
+await sendFile(
+file
+);
+
+}
+
+
+sendingProgress.style.width =
+"100%";
+
+sendingTitle.innerText =
+"Sending " +
+totalFilesToSend +
+"/" +
+totalFilesToSend;
+
+
+transferStatus.innerText =
+"Successfully Sent";
+
+transferStatus.className =
+"transfer-status sent-success";
+
+
+selectedFilesElement.innerHTML =
+"";
+
+selectedFiles = [];
+
+fileInput.value = "";
+
+
+dataChannel.send(
+JSON.stringify({
+type:
+"transfer-complete"
+})
+);
+
+
+setTimeout(
+() => {
+
+sendingProgressContainer
+.classList.add(
+"hidden"
+);
+
+sendingProgress.style.width =
+"0%";
+
+},
+1500
+);
+
+
+} catch (
+error
+) {
+
+console.error(
+error
+);
+
+transferStatus.innerText =
+"Sending Failed";
+
+}
+
+
+sendFilesBtn.disabled =
+false;
+
+}
+);
+
+
+/* SEND FILE */
+
+async function sendFile(
+file
+) {
+
+dataChannel.send(
+JSON.stringify({
+
+type:
+"file-start",
+
+name:
+file.name,
+
+size:
+file.size,
+
+mime:
+file.type ||
+"application/octet-stream"
+
+})
+);
+
+
+const chunkSize =
+16 * 1024;
+
+let offset = 0;
+
+
+while (
+offset < file.size
+) {
+
+while (
+dataChannel.bufferedAmount >
+2 * 1024 * 1024
+) {
+
+await sleep(20);
+
+}
+
+
+const chunk =
+file.slice(
+offset,
+offset + chunkSize
+);
+
+const buffer =
+await chunk.arrayBuffer();
+
+
+dataChannel.send(
+buffer
+);
+
+offset +=
+buffer.byteLength;
+
+
+const percent =
+file.size > 0
+?
+(
+offset /
+file.size
+) * 100
+:
+100;
+
+
+sendingProgress.style.width =
+Math.min(
+100,
+percent
+) + "%";
+
+
+await sleep(0);
+
+}
+
+
+dataChannel.send(
+JSON.stringify({
+type:
+"file-end"
+})
+);
+
+}
+
+
+/* RECEIVE FILE */
+
+function finishReceivingFile() {
+
+if (
+!incomingFile
+) return;
+
+
+const blob =
+new Blob(
+incomingChunks,
+{
+type:
+incomingFile.mime
+}
+);
+
+
+const url =
+URL.createObjectURL(
+blob
+);
+
+
+receivedFiles.push({
+
+name:
+incomingFile.name,
+
+size:
+incomingFile.size,
+
+mime:
+incomingFile.mime,
+
+url:
+url
+
+});
+
+
+renderReceivedFiles();
+
+
+incomingFile = null;
+
+incomingChunks = [];
+
+incomingBytes = 0;
+
+receivingProgress.style.width =
+"100%";
+
+}
+
+
+/* RECEIVED FILES */
+
+function renderReceivedFiles() {
+
+receivedFilesElement.innerHTML =
+"";
+
+
+receivedFiles.forEach(
+file => {
+
+const item =
+document.createElement(
+"div"
+);
+
+item.className =
+"received-item";
+
+
+const name =
+document.createElement(
+"div"
+);
+
+name.className =
+"received-name";
+
+name.innerText =
+file.name;
+
+item.appendChild(
+name
+);
+
+
+/* PREVIEW */
+
+if (
+previewCheckbox.checked
+) {
+
+if (
+file.mime.startsWith(
+"image/"
+)
+) {
+
+const image =
+document.createElement(
+"img"
+);
+
+image.className =
+"preview";
+
+image.src =
+file.url;
+
+image.alt =
+file.name;
+
+item.appendChild(
+image
+);
+
+}
+
+
+else if (
+file.mime.startsWith(
+"video/"
+)
+) {
+
+const video =
+document.createElement(
+"video"
+);
+
+video.className =
+"video-preview";
+
+video.src =
+file.url;
+
+video.controls =
+true;
+
+video.playsInline =
+true;
+
+item.appendChild(
+video
+);
+
+}
+
+}
+
+
+const download =
+document.createElement(
+"a"
+);
+
+download.className =
+"download";
+
+download.href =
+file.url;
+
+download.download =
+file.name;
+
+download.innerText =
+"Download";
+
+item.appendChild(
+download
+);
+
+
+receivedFilesElement.appendChild(
+item
+);
+
+}
+);
+
+
+if (
+receivedFiles.length > 1
+) {
+
+downloadAllBtn.classList.remove(
+"hidden"
+);
+
+} else {
+
+downloadAllBtn.classList.add(
+"hidden"
+);
+
+}
+
+}
+
+
+/* PREVIEW */
+
+previewCheckbox.addEventListener(
+"change",
+() => {
+
+renderReceivedFiles();
+
+}
+);
+
+
+/* DOWNLOAD ALL */
+
+downloadAllBtn.addEventListener(
+"click",
+async () => {
+
+for (
+const file
+of receivedFiles
+) {
+
+const link =
+document.createElement(
+"a"
+);
+
+link.href =
+file.url;
+
+link.download =
+file.name;
+
+document.body.appendChild(
+link
+);
+
+link.click();
+
+link.remove();
+
+await sleep(300);
+
+}
+
+}
+);
+
+
+/* FORMAT BYTES */
+
+function formatBytes(
+bytes
+) {
+
+if (
+bytes === 0
+) return "0 Bytes";
+
+
+const units = [
+"Bytes",
+"KB",
+"MB",
+"GB"
+];
+
+
+const i =
+Math.floor(
+Math.log(bytes) /
+Math.log(1024)
+);
+
+
+return (
+parseFloat(
+(
+bytes /
+Math.pow(
+1024,
+i
+)
+).toFixed(2)
+) +
+" " +
+units[i]
+);
+
+}
+
+
+/* SLEEP */
+
+function sleep(ms) {
+
+return new Promise(
+resolve =>
+setTimeout(
+resolve,
+ms
+)
+);
+
+}
+
+
+/*
+    CHECK IF PAGE WAS OPENED
+    FROM QR CODE
+*/
+
+checkPairingURL();
+
+</script>
+
+</body>
+
+</html>

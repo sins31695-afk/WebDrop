@@ -1,0 +1,22 @@
+{
+  "name": "webdrop",
+  "version": "1.0.0",
+  "description": "Direct device-to-device file sharing with WebRTC",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "webdrop",
+    "file-sharing",
+    "webrtc",
+    "p2p",
+    "socket.io"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}
